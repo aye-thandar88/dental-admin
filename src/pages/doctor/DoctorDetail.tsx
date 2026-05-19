@@ -1,4 +1,4 @@
-import { UserOutlined } from "@ant-design/icons";
+import { useEffect, useState } from "react";
 import {
   Avatar,
   Card,
@@ -9,29 +9,94 @@ import {
   Tabs,
   Tag,
   Typography,
+  Spin,
+  message,
 } from "antd";
-import React from "react";
-import {
-  initalPatients,
-  initialAppointments,
-  initialDentists,
-} from "../../app/mockData";
+import { UserOutlined } from "@ant-design/icons";
+import { useParams } from "react-router-dom";
+
+import { profileService } from "../../services/profileService";
+import { appointmentService } from "../../services/appointmentService";
+import { medicalRecordService } from "../../services/medicalRecordService";
 
 const { Title } = Typography;
 const { TabPane } = Tabs;
 
-const getDentistStatusTag = (status: Dentist["status"]) => {
-  return status === "Available" ? (
-    <Tag color="green">Available</Tag>
-  ) : (
-    <Tag color="blue">In Treatment</Tag>
-  );
-};
-
 const DoctorDetail = () => {
-  const dentist: Dentist = initialDentists[0];
-  const patients: PatientInfo[] = initalPatients;
-  const schedule: AppointmentBooking[] = initialAppointments;
+  const { id } = useParams();
+
+  const [doctor, setDoctor] = useState<any>(null);
+  const [appointments, setAppointments] = useState<any[]>([]);
+  const [patients, setPatients] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  console.log("patients id:", patients);
+
+  useEffect(() => {
+    if (id) loadData(id);
+  }, [id]);
+
+  const loadData = async (doctorId: string) => {
+    try {
+      setLoading(true);
+
+      const [doctorData, appts, medicalRecords] = await Promise.all([
+        profileService.getByDoctor(doctorId),
+        appointmentService.getByDoctor(doctorId),
+        medicalRecordService.getDoctorHistory(doctorId),
+      ]);
+
+      setDoctor(doctorData?.[0] || null);
+      setAppointments(appts || []);
+      setPatients(medicalRecords || []);
+    } catch (err: any) {
+      message.error("Failed to load doctor details");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const scheduleColumns = [
+    {
+      title: "Date",
+      dataIndex: "appointment_date",
+      render: (d: string) => new Date(d).toLocaleDateString(),
+    },
+    {
+      title: "Patient",
+      dataIndex: ["patient", "name"],
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      render: (status: string) => (
+        <Tag color={status === "completed" ? "green" : "blue"}>{status}</Tag>
+      ),
+    },
+  ];
+
+  const patientColumns = [
+    {
+      title: "Name",
+      dataIndex: "name",
+    },
+    {
+      title: "Phone",
+      dataIndex: "phone",
+    },
+    { title: "Treatment", dataIndex: "treatment" },
+    { title: "Last Visit", dataIndex: "lastVisit" },
+  ];
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: "center", marginTop: 50 }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  if (!doctor) return <div>No doctor found</div>;
 
   return (
     <div>
@@ -42,60 +107,44 @@ const DoctorDetail = () => {
             <Avatar size={64} icon={<UserOutlined />} />
           </Col>
           <Col style={{ marginLeft: 16 }}>
-            <Title level={4}>{dentist.name}</Title>
-            <p>{dentist.specialty}</p>
+            <Title level={4}>{doctor.name}</Title>
+            <p>{doctor.phone}</p>
           </Col>
         </Row>
       </Card>
 
-      {/* Tabs */}
       <Tabs defaultActiveKey="1" style={{ marginTop: 20 }}>
-        {/* Overview */}
         <TabPane tab="Overview" key="1">
-          <Card hoverable>
+          <Card>
             <Descriptions column={2}>
-              <Descriptions.Item label="Name">{dentist.name}</Descriptions.Item>
-              <Descriptions.Item label="Specialty">
-                {dentist.specialty}
+              <Descriptions.Item label="Name">{doctor.name}</Descriptions.Item>
+              <Descriptions.Item label="Gender">
+                {doctor.gender}
               </Descriptions.Item>
               <Descriptions.Item label="Phone">
-                {dentist.phone}
+                {doctor.phone}
+              </Descriptions.Item>
+              <Descriptions.Item label="Status">
+                <Tag color="green">Available</Tag>
               </Descriptions.Item>
             </Descriptions>
           </Card>
         </TabPane>
 
-        {/* Schedule */}
         <TabPane tab="Schedule" key="2">
           <Table
             rowKey="id"
-            dataSource={schedule}
-            columns={[
-              { title: "Date", dataIndex: "date" },
-              { title: "Time", dataIndex: "time" },
-              {
-                title: "Status",
-                dataIndex: "status",
-                render: (status: DentistStatus) => (
-                  <Tag>{getDentistStatusTag(status)}</Tag>
-                ),
-              },
-            ]}
+            dataSource={appointments}
+            columns={scheduleColumns}
             pagination={false}
           />
         </TabPane>
 
-        {/* Patients */}
         <TabPane tab="Patients" key="3">
           <Table
             rowKey="id"
             dataSource={patients}
-            columns={[
-              { title: "Name", dataIndex: "name" },
-              { title: "Phone", dataIndex: "phone" },
-              { title: "Treatment", dataIndex: "Teeth Cleaning" },
-              { title: "Last Visit", dataIndex: "lastVisit" },
-            ]}
+            columns={patientColumns}
             pagination={false}
           />
         </TabPane>

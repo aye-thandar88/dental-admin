@@ -1,10 +1,8 @@
-// HeaderBar.tsx
 import {
   Avatar,
   Button,
   Dropdown,
   Flex,
-  Layout,
   Modal,
   Space,
   Switch,
@@ -13,44 +11,42 @@ import {
 } from "antd";
 import { useAppStore } from "../../app/store";
 import {
-  DownOutlined,
   ExclamationCircleOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { colors, fontSizes } from "../../app/constant";
+import { fontSizes } from "../../app/constant";
 import AppBreadcrumb from "../common/AppBreadcrumb";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../../services/authService";
 
-const { Header } = Layout;
 const { Text } = Typography;
 
 export default function HeaderBar() {
   const { toggleTheme, theme, collapsed, toggleSidebar } = useAppStore();
   const navigate = useNavigate();
 
-const handleLogout = () => {
-  Modal.confirm({
-    title: "Are you sure you want to logout?",
-    icon: <ExclamationCircleOutlined />,
-    okText: "Yes, Logout",
-    cancelText: "Cancel",
-    okType: "danger",
+  const handleLogout = () => {
+    Modal.confirm({
+      title: "Are you sure you want to logout?",
+      icon: <ExclamationCircleOutlined />,
+      okText: "Yes, Logout",
+      cancelText: "Cancel",
+      okType: "danger",
 
-    async onOk() {
-      try {
-        await authService.logout();
-        // message.success("Logged out successfully");
-        navigate("/login");
-      } catch (error: any) {
-        // message.error(error.message);
-      }
-    },
-  });
-};
+      async onOk() {
+        try {
+          await authService.logout();
+
+          navigate("/login");
+        } catch (error: any) {
+          // message.error(error.message);
+        }
+      },
+    });
+  };
 
   const items: MenuProps["items"] = [
     {

@@ -1,94 +1,151 @@
 import {
   CalendarOutlined,
-  EyeOutlined,
+  CheckOutlined,
+  CloseOutlined,
+  EditOutlined,
   FilterOutlined,
   PlusOutlined,
-  EditOutlined,
 } from "@ant-design/icons";
 import {
-  Avatar,
   Button,
   Card,
-  Col,
-  DatePicker,
   Input,
   Layout,
-  Row,
   Space,
   Tabs,
-  Tag,
   Typography,
+  Row,
+  Col,
+  Tag,
+  message,
+  Avatar,
 } from "antd";
+import { useEffect, useState } from "react";
 import dayjs from "dayjs";
-import React, { useState } from "react";
-import { useParams } from "react-router-dom";
-import {
-  appointmentsList,
-  initialDentists,
-  statusColor,
-} from "../../app/mockData";
-import StatusSummary from "./StatusSummary";
+
+import { appointmentService } from "../../services/appointmentService";
+import { profileService } from "../../services/profileService";
 import CreateAppointment from "./CreateAppointment";
+import StatusSummary from "./StatusSummary";
+import { useLocation } from "react-router-dom";
+import { colors } from "../../app/constant";
+import CreateMedicalRecord from "../medicalRecord/CreateMedicalRecord";
+import BillingFormModal from "../bill/BillingFormModal";
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
 
-const getDentistStatusTag = (status: Dentist["status"]) => {
-  return status === "Available" ? (
-    <Tag color="green">Available</Tag>
+const getDentistStatusTag = (status: string) => {
+  return status === "approved" ? (
+    <Tag color="green">{status}</Tag>
   ) : (
-    <Tag color="blue">In Treatment</Tag>
+    <Tag color="blue">{status}</Tag>
   );
 };
 
-const DentistCard = ({ dentist }: { dentist: Dentist }) => {
+const DentistCard = ({ dentist }: { dentist: Profile }) => {
   return (
     <Card style={{ borderRadius: 12 }} bodyStyle={{ padding: 16 }}>
-      {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <div style={{ display: "flex", gap: 12 }}>
-          <Avatar size={48} src={dentist.avatar} />
+          <Avatar size={48} src={dentist.profile_photo} />
           <div>
             <Title level={5} style={{ margin: 0 }}>
               {dentist.name}
             </Title>
-            <Text type="secondary">{dentist.specialty}</Text>
+            <Text type="secondary">{dentist.phone}</Text>
           </div>
         </div>
 
         {getDentistStatusTag(dentist.status)}
       </div>
-
-      {/* Stats */}
-      <Row style={{ marginTop: 16 }}>
-        <Col span={12}>
-          <Title level={4} style={{ margin: 0 }}>
-            {dentist.pending}
-          </Title>
-          <Text type="secondary">Pending Appointments today</Text>
-        </Col>
-        <Col span={12}>
-          <Title level={4} style={{ margin: 0 }}>
-            {dentist.completed}
-          </Title>
-          <Text type="secondary">Completed</Text>
-        </Col>
-      </Row>
     </Card>
   );
 };
 
 const Schedule = () => {
-  const { date } = useParams();
-  const [scheduleDate, setScheduleDate] = useState(date ? date : dayjs());
+  const location = useLocation();
+  const pathSnippets = location.pathname.split("/").filter((i) => i);
+
+  const [appointments, setAppointments] = useState<any[]>([]);
+  const [doctors, setDoctors] = useState<any[]>([]);
   const [activeKey, setActiveKey] = useState("1");
 
   const [open, setOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedDate, setSelectedDate] = useState(
+    dayjs().format("YYYY-MM-DD"),
+  );
 
-  const handleOpen = (date: string) => {
-    setSelectedDate(date);
+  const [editingAppointment, setEditingAppointment] = useState<any>(null);
+
+  const [modalOpen, setModalOpen] = useState(false);
+  // const [selectedAppointmentId, setSelectedAppointmentId] = useState<
+  //   number | null
+  // >(null);
+  const [creatingRecord, setCreatingRecord] = useState<any>(null);
+  const [creatingBilling, setCreatingBilling] = useState<any>(null);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const [appts, docs] = await Promise.all([
+        appointmentService.getAll({ appointment_date: pathSnippets[1] }),
+        profileService.getDoctors(),
+      ]);
+
+      setAppointments(appts || []);
+      setDoctors(docs || []);
+    } catch (err: any) {
+      message.error("Failed to load schedule");
+    }
+  };
+
+  const handleOpen = (date?: string) => {
+    setSelectedDate(date || dayjs().format("YYYY-MM-DD"));
     setOpen(true);
+  };
+
+  const handleApprove = async (id: string) => {
+    try {
+      const updatedUser = await appointmentService.update(id, {
+        status: "approved",
+      });
+      message.success(`${updatedUser.name} is now approved!`);
+
+      loadData();
+    } catch (error: any) {
+      console.error(error);
+      message.error("Failed to approve the user.");
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    try {
+      const updatedUser = await appointmentService.update(id, {
+        status: "cancel",
+      });
+      message.success(`${updatedUser.name} is now canceled!`);
+
+      loadData();
+    } catch (error: any) {
+      console.error(error);
+      message.error("Failed to cancel the user.");
+    }
+  };
+
+  const handleCreateMedicalRecord = (appointmentId: number) => {
+    // setSelectedAppointmentId(appointmentId);
+    setCreatingRecord({ appointmentId: appointmentId });
+    setModalOpen(true);
+  };
+
+  const handleCreateBilling = (appointmentId: number) => {
+    // setSelectedAppointmentId(appointmentId);
+    setCreatingBilling({ appointmentId: appointmentId });
+    setModalOpen(true);
   };
 
   return (
@@ -100,105 +157,194 @@ const Schedule = () => {
           alignItems: "center",
           padding: "0 20px",
           borderRadius: "12px",
+          marginBottom: 20,
+          background: "#fff",
         }}
       >
         <div>
           <Title level={4} style={{ margin: 0 }}>
             Appointments
           </Title>
-          <Text type="secondary">Plan, track & manage daily appointments</Text>
+          <Text type="secondary">Plan & manage clinic schedule</Text>
         </div>
 
         <Space>
           <Input placeholder="Search patient..." style={{ width: 220 }} />
           <Button icon={<CalendarOutlined />}>
-            {dayjs(scheduleDate).format("DD MMM YYYY")}
+            {dayjs(selectedDate).format("DD MMM YYYY")}
           </Button>
-          <Button icon={<FilterOutlined />}>Filters</Button>
+
+          <Button icon={<FilterOutlined />}>Filter</Button>
+
           <Button
             type="primary"
             icon={<PlusOutlined />}
-            onClick={() => handleOpen(dayjs(scheduleDate).format("YYYY-MM-DD"))}
+            onClick={() => handleOpen()}
           >
             New Appointment
           </Button>
-
-          <CreateAppointment open={open} onClose={() => setOpen(false)} />
         </Space>
       </Header>
 
-      <Content style={{ paddingBlock: 20 }}>
+      <Content>
         <Card>
           <Tabs
-            defaultActiveKey="1"
+            activeKey={activeKey}
+            onChange={setActiveKey}
             items={[
               { key: "1", label: "Appointments" },
-              { key: "2", label: "Dentist Allocation" },
+              { key: "2", label: "Dentists" },
             ]}
-            onChange={(key) => setActiveKey(key)}
           />
 
-          {activeKey === "1" ? (
+          {activeKey === "1" && (
             <>
-              <StatusSummary />
+              <StatusSummary appointments={appointments} />
 
-              <Space
-                direction="vertical"
-                style={{ width: "100%", marginTop: "10px" }}
-                size={12}
-              >
-                {appointmentsList.map(
-                  (item: AppointmentDetails, idx: number) => (
-                    <Card key={idx} hoverable>
-                      <Row align="middle" justify="space-between">
-                        {/* Left: Time */}
-                        <Col>
-                          <Title level={5} style={{ margin: 0 }}>
-                            {item.time}
-                          </Title>
-                        </Col>
+              <div style={{ marginTop: 16 }}>
+                {appointments.map((item) => (
+                  <Card key={item.id} style={{ marginBottom: 10 }}>
+                    <Row justify="space-between" align="middle">
+                      <Col>
+                        <b>{item.appointment_date}</b>
+                        <div>{item.patient?.name}</div>
+                        <small>
+                          {item.doctor?.name} • {item.id || "-"}
+                        </small>
+                      </Col>
 
-                        {/* Middle: Info */}
-                        <Col flex="auto" style={{ paddingLeft: 20 }}>
-                          <Space direction="vertical" size={0}>
-                            <Text strong>{item.patient}</Text>
-                            <Text type="secondary">{item.treatment}</Text>
-                            <Text type="secondary" style={{ fontSize: 12 }}>
-                              {item.doctor} • {item.chair}
-                            </Text>
-                          </Space>
-                        </Col>
+                      <Col>
+                        <Tag
+                          color={
+                            item.status === "approved"
+                              ? "green"
+                              : item.status === "cancel"
+                                ? "red"
+                                : "blue"
+                          }
+                        >
+                          {item.status || "pending"}
+                        </Tag>
+                      </Col>
 
-                        {/* Status */}
-                        <Col>
-                          <Tag color={statusColor[item.status]}>
-                            {item.status}
-                          </Tag>
-                        </Col>
-
-                        {/* Action */}
-                        <Col>
-                          <Button
-                            icon={<EditOutlined />}
-                            style={{ borderStyle: "hidden" }}
-                          />
-                        </Col>
-                      </Row>
-                    </Card>
-                  ),
-                )}
-              </Space>
+                      <Col style={{ display: "flex", gap: 8 }}>
+                        {item.status === "approved" && (
+                          <>
+                            <Button
+                              icon={<PlusOutlined style={{ color: "#fff" }} />}
+                              onClick={() => handleCreateMedicalRecord(item.id)}
+                              style={{
+                                borderStyle: "none",
+                                background: colors.primary,
+                                color: "#fff",
+                              }}
+                            >
+                              Create Medical Record
+                            </Button>
+                            <Button
+                              icon={<PlusOutlined style={{ color: "#fff" }} />}
+                              onClick={() => handleCreateBilling(item.id)}
+                              style={{
+                                borderStyle: "none",
+                                background: colors.primary,
+                                color: "#fff",
+                              }}
+                            >
+                              Create Billing
+                            </Button>
+                          </>
+                        )}
+                        <Button
+                          icon={<EditOutlined style={{ color: "#fff" }} />}
+                          onClick={() => setEditingAppointment(item)}
+                          style={{
+                            borderStyle: "none",
+                            background: colors.primary,
+                          }}
+                        />
+                        {item.status !== "approved" &&
+                          item.status !== "rejected" && (
+                            <>
+                              <Button
+                                icon={
+                                  <CheckOutlined style={{ color: "#fff" }} />
+                                }
+                                onClick={() => handleApprove(item.id)}
+                                style={{
+                                  borderStyle: "none",
+                                  background: colors.primary,
+                                }}
+                              />
+                              <Button
+                                icon={
+                                  <CloseOutlined style={{ color: "#fff" }} />
+                                }
+                                onClick={() => handleReject(item.id)}
+                                style={{
+                                  borderStyle: "none",
+                                  background: colors.primary,
+                                }}
+                              />
+                            </>
+                          )}
+                      </Col>
+                    </Row>
+                  </Card>
+                ))}
+              </div>
             </>
-          ) : (
+          )}
+
+          {activeKey === "2" && (
             <Row gutter={[16, 16]}>
-              {initialDentists.map((dentist) => (
-                <Col xs={24} md={12} key={dentist.id}>
-                  <DentistCard dentist={dentist} />
+              {doctors.map((doc) => (
+                <Col xs={24} md={12} key={doc.id}>
+                  <DentistCard dentist={doc} />
                 </Col>
               ))}
             </Row>
           )}
         </Card>
+
+        <CreateAppointment
+          open={open}
+          onClose={() => setOpen(false)}
+          onSuccess={loadData}
+        />
+
+        {editingAppointment && (
+          <CreateAppointment
+            open={!!editingAppointment}
+            onClose={() => {
+              setEditingAppointment(null);
+              setOpen(false);
+            }}
+            onSuccess={loadData}
+            editingAppointment={editingAppointment}
+          />
+        )}
+
+        {creatingRecord && (
+          <CreateMedicalRecord
+            open={modalOpen}
+            onClose={() => setModalOpen(false)}
+            createRecord={creatingRecord}
+            onSuccess={() => {
+              message.success("Medical record created!");
+            }}
+          />
+        )}
+
+        {creatingBilling && (
+          <BillingFormModal
+            open={!!creatingBilling}
+            onClose={() => setCreatingBilling(null)}
+            createRecord={creatingBilling}
+            onSuccess={() => {
+              message.success("Billing record created!");
+            }}
+          />
+        )}
       </Content>
     </Layout>
   );

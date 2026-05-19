@@ -1,14 +1,14 @@
-import { Badge, Button, Calendar, Form, Input, TimePicker } from "antd";
-import dayjs, { Dayjs } from "dayjs";
-import React, { useState } from "react";
+import { Badge, Calendar, message } from "antd";
+import { Dayjs } from "dayjs";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { initialAppointments } from "../../app/mockData";
+import { appointmentService } from "../../services/appointmentService";
 
 const Appointment = () => {
   const navigate = useNavigate();
 
-  const [appointments, setAppointments] =
-    useState<AppointmentBooking[]>(initialAppointments);
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
+  const [appointments, setAppointments] = useState<AppointmentBooking[]>([]);
 
   const dateCellRender = (value: Dayjs) => {
     const dateStr = value.format("YYYY-MM-DD");
@@ -28,16 +28,34 @@ const Appointment = () => {
     );
   };
 
+  const loadData = async () => {
+    try {
+      const appts = await appointmentService.getAll({
+        appointment_date: selectedDate?.format("YYYY-MM-DD"),
+      });
+
+      setAppointments(appts || []);
+    } catch (err: any) {
+      message.error("Failed to load schedule");
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, [selectedDate]);
+
   return (
     <div>
-      {/* <Title level={2}>Dental Clinic Appointment Calendar</Title> */}
-
       <Calendar
         dateCellRender={dateCellRender}
-        // onSelect={(date) => openModal(date.format("YYYY-MM-DD"))}
-        onSelect={(date) =>
-          navigate(`/appointment/${date.format("YYYY-MM-DD")}`)
-        }
+        onSelect={(date) => {
+          // setSelectedDate(date);
+          navigate(`/appointment/${date.format("YYYY-MM-DD")}`);
+        }}
+        onChange={(date) => {
+          setSelectedDate(date);
+        }}
       />
     </div>
   );

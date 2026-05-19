@@ -1,54 +1,5 @@
-// import { theme } from "antd";
-// import { colors } from "./constant";
-
-// export const getThemeConfig = (mode: "light" | "dark") => {
-//   const isDark = mode === "dark";
-
-//   return {
-//     algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
-
-//     token: {
-//       colorPrimary: colors.primary,
-//       colorInfo: colors.secondary,
-//       colorWarning: colors.accent,
-
-//       colorBgBase: isDark ? colors.deepCharcoal : colors.white,
-//       colorBgContainer: isDark ? colors.primary : colors.white,
-
-//       colorText: isDark ? "#EAEAEA" : colors.primary,
-
-//       borderRadius: 12,
-//     },
-
-//     components: {
-//       Layout: {
-//         headerBg: isDark ? colors.deepCharcoal : colors.white,
-//         siderBg: colors.primary,
-//       },
-
-//       Menu: {
-//         darkItemBg: colors.primary,
-//         darkItemSelectedBg: colors.secondary,
-//         darkItemSelectedColor: "#fff",
-//       },
-
-//       Card: {
-//         colorBgContainer: isDark ? "#1A1D26" : colors.white,
-//       },
-
-//       Button: {
-//         colorPrimary: isDark ? colors.secondary : colors.primary,
-//       },
-//       Text: {
-//         color: isDark ? "#fff" : colors.primary,
-//       },
-//     },
-//   };
-// };
-
 import { theme } from "antd";
 import { appColors } from "./constant";
-import { Content } from "antd/es/layout/layout";
 
 export const getThemeConfig = (mode: "light" | "dark") => {
   const isDark = mode === "dark";

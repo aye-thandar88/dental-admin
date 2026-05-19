@@ -1,5 +1,4 @@
 import { Layout } from "antd";
-import { useAppStore } from "../../app/store";
 import Sidebar from "./Sidebar";
 import HeaderBar from "./Header";
 import { Outlet } from "react-router-dom";
@@ -7,7 +6,6 @@ import { Outlet } from "react-router-dom";
 const { Content } = Layout;
 
 const MainLayout = () => {
-  const { collapsed } = useAppStore();
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -16,7 +14,6 @@ const MainLayout = () => {
         <HeaderBar />
         <Content
           style={{
-            // margin: '24px 16px',
             padding: 24,
             minHeight: 280,
             borderRadius: 12,

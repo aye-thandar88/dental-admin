@@ -1,9 +1,30 @@
 import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
+import { Spin } from "antd";
 
 const ProtectedRoute = () => {
-//   const isAuthenticated = !!localStorage.getItem("token"); // or context
+  const { isAuthenticated, session, loading } = useAuth();
 
-  return true ? <Outlet /> : <Navigate to="/login" replace />;
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <Spin size="large" tip="Loading..." />
+      </div>
+    );
+  }
+
+  return isAuthenticated && session ? (
+    <Outlet />
+  ) : (
+    <Navigate to="/login" replace />
+  );
 };
 
 export default ProtectedRoute;

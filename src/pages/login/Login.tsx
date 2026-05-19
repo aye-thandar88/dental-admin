@@ -1,10 +1,12 @@
-import { Form, Input, Button, Typography, Card, Image, Grid } from "antd";
+import { Form, Input, Button, Typography, Card, Image, Grid, message, Alert } from "antd";
 import { LockOutlined, PhoneOutlined } from "@ant-design/icons";
+import { useState } from "react";
 import ToothLogo from "../../assets/images/toothLogo.jpg";
 import Tooths from "../../assets/images/dentist2.jpg";
 import { fontSizes } from "../../app/constant";
 import { authService } from "../../services/authService";
 import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../../store/authStore";
 
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -12,23 +14,41 @@ const { useBreakpoint } = Grid;
 const Login = () => {
   const screens = useBreakpoint();
   const navigate = useNavigate();
+  const [form] = Form.useForm();
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [forceShowForm, setForceShowForm] = useState(false);
 
-  const onFinish = async (values: any) => {
+  const onFinish = async (values: { phone: string; password: string }) => {
     try {
+      setSubmitting(true);
+      setErrorMessage(null);
+
       const { phone, password } = values;
-      const email = `${phone}@themoon.com`;
+      const { data, error } = await authService.login(phone, password);
 
-      const data = await authService.login(email, password);
-
-      if (!data.user) {
-        navigate("/login");
+      if (error || !data.session || !data.user) {
+        const msg =
+          error?.message || "Login failed. Please check your credentials.";
+        setErrorMessage(msg);
+        message.error(msg);
+        return; // setSubmitting reset in finally
       }
 
-      navigate("/");
+      // Supabase login succeeded. onAuthStateChange will now fire SIGNED_IN,
+      // which loads the profile into the store. We wait for it (up to 2s)
+      // so the app page has profile data immediately on first render.
+      await waitForProfile();
 
-      console.log(data);
-    } catch (error: any) {
-      console.log(error);
+      navigate("/");
+    } catch (err: any) {
+      const msg = err?.message || "An unexpected error occurred";
+      setErrorMessage(msg);
+      message.error(msg);
+      console.error("Login error:", err);
+    } finally {
+      // Always runs — clears the loading state whether we succeeded or failed
+      setSubmitting(false);
     }
   };
 
@@ -71,19 +91,43 @@ const Login = () => {
             </Text>
           </Title>
 
-          <Form layout="vertical" onFinish={onFinish}>
+          <Form layout="vertical" onFinish={onFinish} form={form}>
+            {forceShowForm && (
+              <Alert
+                message="Auth Check Timeout"
+                description="Authentication check took too long. Showing login form. If this persists, check your Supabase configuration."
+                type="warning"
+                showIcon
+                closable
+                onClose={() => setForceShowForm(false)}
+                style={{ marginBottom: "16px" }}
+              />
+            )}
+
+            {errorMessage && (
+              <Alert
+                message="Login Failed"
+                description={errorMessage}
+                type="error"
+                showIcon
+                closable
+                onClose={() => setErrorMessage(null)}
+                style={{ marginBottom: "16px" }}
+              />
+            )}
+
             <Form.Item
               label="Phone Number"
               name="phone"
               rules={[
                 { required: true, message: "Please enter your phone number" },
-                // { type: "integer", message: "Invalid phone number" },
               ]}
             >
               <Input
                 prefix={<PhoneOutlined />}
                 placeholder="09XXXXXXXXX"
                 size="large"
+                disabled={submitting}
               />
             </Form.Item>
 
@@ -96,6 +140,7 @@ const Login = () => {
                 prefix={<LockOutlined />}
                 placeholder="Enter password"
                 size="large"
+                disabled={submitting}
               />
             </Form.Item>
 
@@ -105,16 +150,13 @@ const Login = () => {
                 htmlType="submit"
                 block
                 size="large"
-                style={styles.button}
+                loading={submitting}
+                disabled={submitting}
               >
-                Login
+                {submitting ? "Logging in..." : "Login"}
               </Button>
             </Form.Item>
           </Form>
-
-          {/* <Text type="secondary" style={{ textAlign: "center", display: "block" }}>
-            © 2026 Dental Clinic System
-          </Text> */}
         </Card>
       </div>
     </div>
@@ -122,6 +164,33 @@ const Login = () => {
 };
 
 export default Login;
+
+function waitForProfile(): Promise<void> {
+  return new Promise((resolve) => {
+    // Already loaded (e.g. fast network)
+    if (useAuthStore.getState().profile) {
+      resolve();
+      return;
+    }
+
+    const unsub = useAuthStore.subscribe(
+      (state) => state.profile,
+      (profile) => {
+        if (profile) {
+          unsub();
+          resolve();
+        }
+      }
+    );
+
+    // Fallback: don't block forever if profile fetch fails
+    setTimeout(() => {
+      unsub();
+      resolve();
+    }, 2000);
+  });
+}
+
 
 const styles: any = {
   container: {
@@ -131,8 +200,7 @@ const styles: any = {
   },
   left: {
     flex: 1,
-    // background: "linear-gradient(135deg, #1890ff, #36cfc9)",
-    backgroundImage: `url(${Tooths})`, // or any image
+    backgroundImage: `url(${Tooths})`,
     backgroundSize: "cover",
     backgroundPosition: "center",
     backgroundRepeat: "no-repeat",

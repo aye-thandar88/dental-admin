@@ -5,7 +5,6 @@ import {
   SettingOutlined,
   UsergroupAddOutlined,
   MedicineBoxOutlined,
-  BarChartOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../app/store";
@@ -20,7 +19,9 @@ export default function Sidebar() {
 
   return (
     <Sider trigger={null} collapsible collapsed={collapsed} width={250}>
-      <div style={{ flex: "column", textAlign: "center", padding: "0 0 16px 0" }}>
+      <div
+        style={{ flex: "column", textAlign: "center", padding: "0 0 16px 0" }}
+      >
         {collapsed ? (
           <Image
             src={ToothLogo}
@@ -52,10 +53,14 @@ export default function Sidebar() {
             icon: <CalendarOutlined />,
             label: "Appointment",
           },
+          {
+            key: "/medical-record",
+            icon: <MedicineBoxOutlined />,
+            label: "Medical Record",
+          },
+          { key: "/billing", icon: <SettingOutlined />, label: "Billing" },
           { key: "/doctor", icon: <MedicineBoxOutlined />, label: "Doctor" },
           { key: "/patient", icon: <UsergroupAddOutlined />, label: "Patient" },
-          { key: "/report", icon: <BarChartOutlined />, label: "Report" },
-          { key: "/admin", icon: <SettingOutlined />, label: "Admin" },
         ]}
       />
     </Sider>

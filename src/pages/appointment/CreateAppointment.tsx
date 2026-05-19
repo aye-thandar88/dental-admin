@@ -1,58 +1,139 @@
-import { Button, Form, Input, Modal, TimePicker } from "antd";
-import React, { useState } from "react";
+import { Button, Form, Input, Modal, Select, TimePicker, message } from "antd";
+import { useEffect, useState } from "react";
+import dayjs from "dayjs";
 
-type Props = {
-  open: boolean;
-  onClose: () => void;
-};
+import { appointmentService } from "../../services/appointmentService";
+import { profileService } from "../../services/profileService";
 
-const CreateAppointment = (props: Props) => {
-  const { open, onClose } = props;
-  const [isModalOpen, setIsModalOpen] = useState(false);
+const { Option } = Select;
 
+const CreateAppointment = ({
+  open,
+  onClose,
+  onSuccess,
+  editingAppointment,
+}: any) => {
   const [form] = Form.useForm();
+  const [patients, setPatients] = useState<any[]>([]);
+  const [doctors, setDoctors] = useState<any[]>([]);
 
-  const handleAddAppointment = (values: any) => {
-    const newAppointment: AppointmentBooking = {
-      date: values.date.format("YYYY-MM-DD"),
-      time: values.time.format("HH:mm"),
-      patientName: values.patientName,
-      reason: values.reason,
-    };
+  useEffect(() => {
+    loadUsers();
+  }, []);
 
-    setIsModalOpen(false);
+  const loadUsers = async () => {
+    const [p, d] = await Promise.all([
+      profileService.getPatients(),
+      profileService.getDoctors(),
+    ]);
+
+    setPatients(p || []);
+    setDoctors(d || []);
+  };
+
+  const loadEditUsers = async (editingAppointment: any) => {
+    const [p, d] = await Promise.all([
+      profileService.getByPatient(editingAppointment.patient_id),
+      profileService.getByDoctor(editingAppointment.doctor_id),
+    ]);
+
+    setPatients(p || []);
+    setDoctors(d || []);
+  };
+
+  if (editingAppointment) {
+    loadEditUsers(editingAppointment);
+    form.setFieldsValue({
+      patient_id: patients?.[0]?.id || null,
+      doctor_id: doctors?.[0]?.id || null,
+      date: editingAppointment.appointment_date,
+      time: dayjs(editingAppointment.appointment_time, "HH:mm"),
+    });
+  } else {
     form.resetFields();
+  }
+
+  const handleSubmit = async (values: any) => {
+    if (editingAppointment) {
+      try {
+        await appointmentService.update(editingAppointment.id, {
+          patient_id: values.patient_id,
+          doctor_id: values.doctor_id,
+          appointment_date: values.date,
+          appointment_time: values.time.format("HH:mm"),
+          status: "pending",
+        });
+
+        message.success("Appointment updated");
+        form.resetFields();
+      } catch (err: any) {
+        message.error("Failed to update appointment");
+        return;
+      }
+    }
+
+    try {
+      await appointmentService.create({
+        patient_id: values.patient_id,
+        doctor_id: values.doctor_id,
+        appointment_date: values.date,
+        appointment_time: values.time.format("HH:mm"),
+        status: "pending",
+      });
+
+      message.success("Appointment created");
+      form.resetFields();
+
+      onClose();
+      onSuccess?.();
+    } catch (err: any) {
+      message.error("Failed to create appointment");
+    }
   };
 
   return (
     <Modal
-      title={`Add Appointment`}
+      title={editingAppointment ? "Edit Appointment" : "Create Appointment"}
       open={open}
       onCancel={onClose}
       footer={null}
     >
-      <Form form={form} layout="vertical" onFinish={handleAddAppointment}>
+      <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <Form.Item
-          name="patientName"
-          label="Patient Name"
+          name="patient_id"
+          label="Patient"
           rules={[{ required: true }]}
         >
-          <Input />
+          <Select>
+            {patients.map((p) => (
+              <Option key={p.id} value={p.id}>
+                {p.name}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+
+        <Form.Item name="doctor_id" label="Doctor" rules={[{ required: true }]}>
+          <Select>
+            {doctors.map((d) => (
+              <Option key={d.id} value={d.id}>
+                {d.name}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+
+        <Form.Item name="date" label="Date" rules={[{ required: true }]}>
+          <Input type="date" />
         </Form.Item>
 
         <Form.Item name="time" label="Time" rules={[{ required: true }]}>
           <TimePicker format="HH:mm" />
         </Form.Item>
 
-        <Form.Item name="reason" label="Reason" rules={[{ required: true }]}>
-          <Input.TextArea />
-        </Form.Item>
-
-        <Form.Item>
-          <Button type="primary" htmlType="submit" block>
-            Add Appointment
-          </Button>
-        </Form.Item>
+        <Button type="primary" htmlType="submit" block>
+          {editingAppointment ? "Update Appointment" : "Create Appointment"}
+        </Button>
       </Form>
     </Modal>
   );

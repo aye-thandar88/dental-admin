@@ -10,6 +10,8 @@ import Patient from "../pages/patient/Patient";
 import PatientDetail from "../pages/patient/PatientDetail";
 import Doctor from "../pages/doctor/Doctor";
 import DoctorDetail from "../pages/doctor/DoctorDetail";
+import MedicalRecord from "../pages/medicalRecord/MedicalRecord";
+import Billing from "../pages/bill/Billing";
 
 export default function AppRouter() {
   return (
@@ -28,6 +30,8 @@ export default function AppRouter() {
             <Route path="/doctor/:id" element={<DoctorDetail />} />
             <Route path="/patient" element={<Patient />} />
             <Route path="/patient/:id" element={<PatientDetail />} />
+            <Route path="/medical-record" element={<MedicalRecord />} />
+            <Route path="/billing" element={<Billing  />} />
           </Route>
         </Route>
       </Routes>

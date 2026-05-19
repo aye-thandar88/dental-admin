@@ -4,57 +4,60 @@ import {
   Card,
   Typography,
   Statistic,
-  List,
-  Tag,
   Button,
   Space,
+  message,
 } from "antd";
 import {
   UserOutlined,
   TeamOutlined,
   CalendarOutlined,
-  WarningOutlined,
-  AlertOutlined,
 } from "@ant-design/icons";
-import { colors } from "../../app/constant";
+import { useEffect, useState } from "react";
+import { appointmentService } from "../../services/appointmentService";
+import { profileService } from "../../services/profileService";
+import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
 
 export default function Dashboard() {
-  const alerts = [
-    {
-      type: "warning",
-      message: "5 appointments pending confirmation",
-    },
-    {
-      type: "error",
-      message: "2 patients missed their appointments today",
-    },
-    {
-      type: "info",
-      message: "Next appointment in 30 minutes",
-    },
-  ];
+  const [appointments, setAppointments] = useState<any[]>([]);
+  const [doctors, setDoctors] = useState<any[]>([]);
+  const [patients, setPatients] = useState<any[]>([]);
+  const [todayAppointments, setTodayAppointments] = useState<any[]>([]);
 
-  const todayAppointments = [
-    { time: "10:00 AM", patient: "John Doe", status: "Confirmed" },
-    { time: "11:00 AM", patient: "Jane Smith", status: "Pending" },
-    { time: "01:00 PM", patient: "Michael Tan", status: "Completed" },
-  ];
+  const loadData = async () => {
+    try {
+      const [appts, todayAppts, docs, pts] = await Promise.all([
+        appointmentService.getAll(),
+        appointmentService.getAll({ appointment_date: dayjs().format("YYYY-MM-DD") }),
+        profileService.getDoctors(),
+        profileService.getPatients(),
+      ]);
 
-  const todayStats = {
-    totalAppointments: 12,
-    pending: 3,
-    completed: 5,
+      setAppointments(appts || []);
+      setTodayAppointments(todayAppts || []);
+      setDoctors(docs || []);
+      setPatients(pts || []);
+    } catch (err: any) {
+      message.error("Failed to load schedule");
+    }
   };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   return (
     <div>
-      {/* KPI Cards */}
       <Row gutter={[16, 16]}>
         <Col xs={24} md={8}>
           <Card hoverable>
-            <Statistic title="Doctors" value={2} prefix={<UserOutlined />} />
+            <Statistic
+              title="Doctors"
+              value={doctors.length}
+              prefix={<UserOutlined />}
+            />
           </Card>
         </Col>
 
@@ -62,7 +65,7 @@ export default function Dashboard() {
           <Card hoverable>
             <Statistic
               title="Patients"
-              value={1925}
+              value={patients.length}
               prefix={<TeamOutlined />}
             />
           </Card>
@@ -72,7 +75,7 @@ export default function Dashboard() {
           <Card hoverable>
             <Statistic
               title="Appointments"
-              value={153}
+              value={appointments.length}
               prefix={<CalendarOutlined />}
             />
           </Card>
@@ -87,25 +90,16 @@ export default function Dashboard() {
         hoverable
       >
         <Row gutter={[16, 16]} align="middle">
-          {/* Left Content */}
           <Col xs={24} md={16}>
             <Title level={3} style={{ marginBottom: 8 }}>
               Welcome back 👋
             </Title>
 
             <Text type="secondary">
-              You have <b>{todayStats.totalAppointments}</b> appointments today.
+              You have <b>{todayAppointments.length}</b> appointments today.
             </Text>
-
-            <div style={{ marginTop: 12 }}>
-              <Space>
-                <Tag color="orange">Pending: {todayStats.pending}</Tag>
-                <Tag color="green">Completed: {todayStats.completed}</Tag>
-              </Space>
-            </div>
           </Col>
 
-          {/* Right Actions */}
           <Col xs={24} md={8} style={{ textAlign: "right" }}>
             <Space wrap>
               <Button type="primary" icon={<CalendarOutlined />}>
@@ -115,19 +109,6 @@ export default function Dashboard() {
           </Col>
         </Row>
       </Card>
-
-      {/* Quick Actions */}
-      <Row gutter={[16, 16]} style={{ marginTop: 20 }}>
-        <Col span={24}>
-          <Card title="Quick Actions" hoverable>
-            <Space wrap>
-              <Button type="primary">+ New Appointment</Button>
-              <Button type="primary">+ New Patient</Button>
-              <Button type="primary">+ New Doctor</Button>
-            </Space>
-          </Card>
-        </Col>
-      </Row>
     </div>
   );
 }
