@@ -54,4 +54,8 @@ export const appColors = {
   success: "#2E7D32",
   warning: "#F59E0B",
   error: "#D32F2F",
+
+  // Actions
+  checkAction: "#52C41A",
+  cancelAction: "#F5222D",
 };

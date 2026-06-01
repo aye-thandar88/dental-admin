@@ -17,10 +17,14 @@ import { useEffect, useState } from "react";
 import { appointmentService } from "../../services/appointmentService";
 import { profileService } from "../../services/profileService";
 import dayjs from "dayjs";
+import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const todayDate = dayjs(Date.now());
+
   const [appointments, setAppointments] = useState<any[]>([]);
   const [doctors, setDoctors] = useState<any[]>([]);
   const [patients, setPatients] = useState<any[]>([]);
@@ -30,7 +34,9 @@ export default function Dashboard() {
     try {
       const [appts, todayAppts, docs, pts] = await Promise.all([
         appointmentService.getAll(),
-        appointmentService.getAll({ appointment_date: dayjs().format("YYYY-MM-DD") }),
+        appointmentService.getAll({
+          appointment_date: dayjs().format("YYYY-MM-DD"),
+        }),
         profileService.getDoctors(),
         profileService.getPatients(),
       ]);
@@ -42,6 +48,10 @@ export default function Dashboard() {
     } catch (err: any) {
       message.error("Failed to load schedule");
     }
+  };
+
+  const handleViewSchedule = () => {
+    navigate(`/appointment/${todayDate.format("YYYY-MM-DD")}`);
   };
 
   useEffect(() => {
@@ -102,7 +112,11 @@ export default function Dashboard() {
 
           <Col xs={24} md={8} style={{ textAlign: "right" }}>
             <Space wrap>
-              <Button type="primary" icon={<CalendarOutlined />}>
+              <Button
+                type="primary"
+                icon={<CalendarOutlined />}
+                onClick={handleViewSchedule}
+              >
                 View Schedule
               </Button>
             </Space>

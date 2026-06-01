@@ -126,6 +126,18 @@ export const profileService = {
     return data;
   },
 
+  async getPatientByPhoneNo(phoneNo: string) {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("phone", phoneNo)
+      .contains("roles", ["patient"]);
+
+    if (error) throw error;
+
+    return data;
+  },
+
   async getPatients() {
     return await this.getProfilesByRole("patient");
   },

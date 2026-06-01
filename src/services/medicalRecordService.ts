@@ -3,21 +3,21 @@ import { supabase } from "../lib/supabase";
 interface GetAllParams {
   doctorId?: string;
   patientId?: string;
+  appointmentId?: string;
   fromDate?: string;
   toDate?: string;
 }
 
 export const medicalRecordService = {
-   async getAll(params: GetAllParams) {
-    let query = supabase
-      .from("medical_records")
-      .select(`
+  async getAll(params: GetAllParams) {
+    let query = supabase.from("medical_records").select(`
         *,
         patient:profiles!medical_records_patient_id_fkey(id, name, phone),
         doctor:profiles!medical_records_doctor_id_fkey(id, name, phone),
         appointment:appointments(id, appointment_date, appointment_time, status)
       `);
 
+    if (params.appointmentId) query = query.eq("appointment_id", params.appointmentId);
     if (params.doctorId) query = query.eq("doctor_id", params.doctorId);
     if (params.patientId) query = query.eq("patient_id", params.patientId);
     if (params.fromDate) query = query.gte("created_at", params.fromDate);
@@ -39,12 +39,12 @@ export const medicalRecordService = {
       appointmentId: record.appointment?.id || null,
       appointmentDate: record.appointment?.appointment_date || null,
       appointmentTime: record.appointment?.appointment_time || null,
-      appointmentStatus: record.appointment?.status || 'pending',
+      appointmentStatus: record.appointment?.status || "pending",
       patientId: record.patient?.id || null,
-      patientName: record.patient?.name || 'Unknown',
+      patientName: record.patient?.name || "Unknown",
       patientPhone: record.patient?.phone || null,
       doctorId: record.doctor?.id || null,
-      doctorName: record.doctor?.name || 'Unknown',
+      doctorName: record.doctor?.name || "Unknown",
       doctorPhone: record.doctor?.phone || null,
     }));
   },
@@ -98,7 +98,11 @@ export const medicalRecordService = {
   async getDoctorHistory(doctorId: string) {
     const { data, error } = await supabase
       .from("medical_records")
-      .select("*")
+      .select(
+        `*,patient:profiles!medical_records_patient_id_fkey(id, name, phone),
+        doctor:profiles!medical_records_doctor_id_fkey(id, name, phone),
+        appointment:appointments(id, appointment_date, appointment_time, status)`,
+      )
       .eq("doctor_id", doctorId)
       .order("created_at", { ascending: false });
 

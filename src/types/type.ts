@@ -132,4 +132,13 @@ declare global {
       };
     };
   }
+
+  interface DoctorAvailability {
+    id?: string;
+    doctor_id: string;
+    day: string;
+    slot_start: string;
+    slot_end: string;
+    is_active: boolean;
+  }
 }

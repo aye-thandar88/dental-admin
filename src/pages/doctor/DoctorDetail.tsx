@@ -48,7 +48,7 @@ const DoctorDetail = () => {
 
       setDoctor(doctorData?.[0] || null);
       setAppointments(appts || []);
-      setPatients(medicalRecords || []);
+      setPatients(transformPatientData(medicalRecords || []));
     } catch (err: any) {
       message.error("Failed to load doctor details");
     } finally {
@@ -154,3 +154,20 @@ const DoctorDetail = () => {
 };
 
 export default DoctorDetail;
+
+const transformPatientData = (data: any[]) => {
+  return data.map((item) => ({
+    id: item.id,
+    name: item.patient?.name || "-",
+    phone: item.patient?.phone || "-",
+    treatment: item.treatment || "-",
+    lastVisit:
+      item.appointment?.appointment_date ||
+      item.created_at?.split("T")[0] ||
+      "-",
+    diagnosis: item.diagnosis,
+    nextVisit: item.next_visit_date,
+    doctorName: item.doctor?.name,
+    appointmentTime: item.appointment?.appointment_time,
+  }));
+};

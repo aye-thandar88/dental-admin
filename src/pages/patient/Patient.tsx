@@ -22,7 +22,7 @@ import { Header } from "antd/es/layout/layout";
 import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { colors } from "../../app/constant";
+import { appColors, colors } from "../../app/constant";
 import { profileService } from "../../services/profileService";
 
 const { Title, Text } = Typography;
@@ -195,33 +195,35 @@ const Patient = () => {
 
       render: (_: any, record: Profile) => (
         <Space>
-          <Button
-            icon={<EditOutlined style={{ color: "#fff" }} />}
-            onClick={() => openModal(record)}
-            style={{
-              borderStyle: "none",
-              background: colors.primary,
-            }}
-          />
-
-          <Button
-            icon={<EyeOutlined style={{ color: "#fff" }} />}
-            onClick={() => navigate(`/patient/${record.id}`)}
-            style={{
-              borderStyle: "none",
-              background: colors.primary,
-            }}
-          />
-
-          {record.status !== "approved" && (
+          {record.status !== "approved" ? (
             <Button
               icon={<CheckOutlined style={{ color: "#fff" }} />}
               onClick={() => handleApprove(record.id)}
               style={{
-                borderStyle: "none",
-                background: colors.primary,
+                background: appColors.checkAction,
+                borderColor: appColors.checkAction,
               }}
             />
+          ) : (
+            <>
+              <Button
+                icon={<EditOutlined style={{ color: "#fff" }} />}
+                onClick={() => openModal(record)}
+                style={{
+                  borderStyle: "none",
+                  background: colors.primary,
+                }}
+              />
+
+              <Button
+                icon={<EyeOutlined style={{ color: "#fff" }} />}
+                onClick={() => navigate(`/patient/${record.id}`)}
+                style={{
+                  borderStyle: "none",
+                  background: colors.primary,
+                }}
+              />
+            </>
           )}
         </Space>
       ),

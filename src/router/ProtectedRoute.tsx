@@ -15,7 +15,7 @@ const ProtectedRoute = () => {
           height: "100vh",
         }}
       >
-        <Spin size="large" tip="Loading..." />
+        <Spin size="large" description="Loading..." />
       </div>
     );
   }

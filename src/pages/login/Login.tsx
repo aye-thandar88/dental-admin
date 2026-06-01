@@ -1,4 +1,14 @@
-import { Form, Input, Button, Typography, Card, Image, Grid, message, Alert } from "antd";
+import {
+  Form,
+  Input,
+  Button,
+  Typography,
+  Card,
+  Image,
+  Grid,
+  message,
+  Alert,
+} from "antd";
 import { LockOutlined, PhoneOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import ToothLogo from "../../assets/images/toothLogo.jpg";
@@ -32,13 +42,8 @@ const Login = () => {
           error?.message || "Login failed. Please check your credentials.";
         setErrorMessage(msg);
         message.error(msg);
-        return; // setSubmitting reset in finally
+        return;
       }
-
-      // Supabase login succeeded. onAuthStateChange will now fire SIGNED_IN,
-      // which loads the profile into the store. We wait for it (up to 2s)
-      // so the app page has profile data immediately on first render.
-      await waitForProfile();
 
       navigate("/");
     } catch (err: any) {
@@ -47,7 +52,6 @@ const Login = () => {
       message.error(msg);
       console.error("Login error:", err);
     } finally {
-      // Always runs — clears the loading state whether we succeeded or failed
       setSubmitting(false);
     }
   };
@@ -164,33 +168,6 @@ const Login = () => {
 };
 
 export default Login;
-
-function waitForProfile(): Promise<void> {
-  return new Promise((resolve) => {
-    // Already loaded (e.g. fast network)
-    if (useAuthStore.getState().profile) {
-      resolve();
-      return;
-    }
-
-    const unsub = useAuthStore.subscribe(
-      (state) => state.profile,
-      (profile) => {
-        if (profile) {
-          unsub();
-          resolve();
-        }
-      }
-    );
-
-    // Fallback: don't block forever if profile fetch fails
-    setTimeout(() => {
-      unsub();
-      resolve();
-    }, 2000);
-  });
-}
-
 
 const styles: any = {
   container: {

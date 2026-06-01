@@ -9,9 +9,9 @@ const StatusSummary = ({ appointments = [] }: StatusSummaryProps) => {
     appointments.filter((a) => a.status === status).length;
 
   const data = [
-    { title: "Pending", count: count("pending"), color: "#1890ff" }, // blue
-    { title: "Approved", count: count("approved"), color: "#52c41a" }, // green
-    { title: "Cancel", count: count("cancel"), color: "#f5222d" }, // red
+    { title: "Pending", count: count("pending"), color: "#1890ff" }, 
+    { title: "Approved", count: count("approved"), color: "#52c41a" }, 
+    { title: "Cancel", count: count("cancel"), color: "#f5222d" }, 
   ];
 
   return (

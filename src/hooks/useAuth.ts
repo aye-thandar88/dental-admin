@@ -7,7 +7,6 @@ export const useAuth = () => {
   const store = useAuthStore();
 
   useEffect(() => {
-    // Guard: prevents state updates after component unmounts
     let isMounted = true;
 
     const getInitialSession = async () => {

@@ -13,6 +13,7 @@ import {
   message,
 } from "antd";
 import {
+  CalendarOutlined,
   CheckOutlined,
   EditOutlined,
   EyeOutlined,
@@ -21,7 +22,8 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import { profileService } from "../../services/profileService";
-import { colors } from "../../app/constant";
+import { appColors, colors } from "../../app/constant";
+import WeeklyScheduleModal from "./WeeklyScheduleModal";
 
 const { Title, Text } = Typography;
 const { Header } = Layout;
@@ -36,6 +38,9 @@ const Doctor = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDoctor, setEditingDoctor] = useState<any>(null);
+
+  const [weekModalOpen, setWeekModalOpen] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
 
   const [form] = Form.useForm();
   const navigate = useNavigate();
@@ -146,31 +151,48 @@ const Doctor = () => {
       title: "Action",
       render: (_: any, record: any) => (
         <Space>
-          <Button
-            icon={<EditOutlined style={{ color: "#fff" }} />}
-            onClick={() => openModal(record)}
-            style={{
-              borderStyle: "none",
-              background: colors.primary,
-            }}
-          />
-          <Button
-            icon={<EyeOutlined style={{ color: "#fff" }} />}
-            onClick={() => navigate(`/doctor/${record.id}`, { state: record })}
-            style={{
-              borderStyle: "none",
-              background: colors.primary,
-            }}
-          />
-          {record.status !== "approved" && (
+          {record.status !== "approved" ? (
             <Button
               icon={<CheckOutlined style={{ color: "#fff" }} />}
               onClick={() => handleApprove(record.id)}
               style={{
-                borderStyle: "none",
-                background: colors.primary,
+                background: appColors.checkAction,
+                borderColor: appColors.checkAction,
               }}
             />
+          ) : (
+            <>
+              <Button
+                icon={<EditOutlined style={{ color: "#fff" }} />}
+                onClick={() => openModal(record)}
+                style={{
+                  borderStyle: "none",
+                  background: colors.primary,
+                }}
+              />
+              <Button
+                icon={<EyeOutlined style={{ color: "#fff" }} />}
+                onClick={() =>
+                  navigate(`/doctor/${record.id}`, { state: record })
+                }
+                style={{
+                  borderStyle: "none",
+                  background: colors.primary,
+                }}
+              />
+              <Button
+                shape="circle"
+                icon={<CalendarOutlined style={{ color: "#fff" }} />}
+                onClick={() => {
+                  setSelectedDoctor(record);
+                  setWeekModalOpen(true);
+                }}
+                style={{
+                  borderStyle: "none",
+                  background: colors.primary,
+                }}
+              />
+            </>
           )}
         </Space>
       ),
@@ -199,7 +221,7 @@ const Doctor = () => {
 
         <Space>
           <Input
-            placeholder="Search doctor"
+            placeholder="Search name"
             value={search}
             onChange={(e) => onSearch(e.target.value)}
           />
@@ -247,6 +269,14 @@ const Doctor = () => {
           </Form.Item>
         </Form>
       </Modal>
+
+      {weekModalOpen && (
+        <WeeklyScheduleModal
+          open={weekModalOpen}
+          doctorId={selectedDoctor?.id}
+          onClose={() => setWeekModalOpen(false)}
+        />
+      )}
     </Layout>
   );
 };
