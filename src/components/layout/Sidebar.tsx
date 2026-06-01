@@ -1,18 +1,15 @@
-import { Layout, Menu, Image, Modal } from "antd";
+import { Layout, Menu, Image } from "antd";
 import {
   DashboardOutlined,
   CalendarOutlined,
   SettingOutlined,
   UsergroupAddOutlined,
   MedicineBoxOutlined,
-  LogoutOutlined,
-  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../app/store";
 import Logo from "../../assets/images/logo.jpg";
 import ToothLogo from "../../assets/images/toothLogo.jpg";
-import { authService } from "../../services/authService";
 
 const { Sider } = Layout;
 

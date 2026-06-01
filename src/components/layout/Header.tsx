@@ -5,7 +5,6 @@ import {
   Descriptions,
   Dropdown,
   Flex,
-  Form,
   Modal,
   Switch,
   Typography,
@@ -28,13 +27,10 @@ import { authService } from "../../services/authService";
 import { useAuthStore } from "../../store/authStore";
 import { useState } from "react";
 
-const { Text } = Typography;
-
 export default function HeaderBar() {
   const { toggleTheme, theme, collapsed, toggleSidebar } = useAppStore();
   const isDark = theme === "dark";
   const navigate = useNavigate();
-  const [form] = Form.useForm();
   const { profile } = useAuthStore();
 
   const [open, setOpen] = useState(false);

@@ -16,7 +16,6 @@ import Tooths from "../../assets/images/dentist2.jpg";
 import { fontSizes } from "../../app/constant";
 import { authService } from "../../services/authService";
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../../store/authStore";
 
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;

@@ -1,7 +1,6 @@
 import {
   CalendarOutlined,
   CheckOutlined,
-  CloseOutlined,
   DeleteOutlined,
   EditOutlined,
   FilterOutlined,
@@ -25,7 +24,6 @@ import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 
 import { appointmentService } from "../../services/appointmentService";
-import { profileService } from "../../services/profileService";
 import CreateAppointment from "./CreateAppointment";
 import StatusSummary from "./StatusSummary";
 import { useLocation } from "react-router-dom";
