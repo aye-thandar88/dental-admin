@@ -59,7 +59,7 @@ const DentistCard = ({ data }: { data: any }) => {
           </div>
         </div>
 
-        <div style={{display: 'flex', alignItems: 'center'}}>
+        <div style={{ display: "flex", alignItems: "center" }}>
           {getDentistStatusTag(
             data?.is_active === true ? "available" : "unavailable",
           )}
@@ -258,38 +258,30 @@ const Schedule = () => {
                       <Col style={{ display: "flex", gap: 8 }}>
                         {item.status === "approved" && (
                           <>
-                            {medicalRecords && medicalRecords.length > 0 && (
-                              <Button
-                                icon={
-                                  <PlusOutlined style={{ color: "#fff" }} />
-                                }
-                                onClick={() =>
-                                  handleCreateMedicalRecord(item.id)
-                                }
-                                style={{
-                                  borderStyle: "none",
-                                  background: colors.primary,
-                                  color: "#fff",
-                                }}
-                              >
-                                Medical Record
-                              </Button>
-                            )}
-                            {billings && billings.length > 0 && (
-                              <Button
-                                icon={
-                                  <PlusOutlined style={{ color: "#fff" }} />
-                                }
-                                onClick={() => handleCreateBilling(item.id)}
-                                style={{
-                                  borderStyle: "none",
-                                  background: colors.primary,
-                                  color: "#fff",
-                                }}
-                              >
-                                Billing
-                              </Button>
-                            )}
+                            <Button
+                              icon={<PlusOutlined style={{ color: "#fff" }} />}
+                              onClick={() => handleCreateMedicalRecord(item.id)}
+                              style={{
+                                borderStyle: "none",
+                                background: colors.primary,
+                                color: "#fff",
+                              }}
+                            >
+                              Medical Record
+                            </Button>
+
+                            <Button
+                              icon={<PlusOutlined style={{ color: "#fff" }} />}
+                              onClick={() => handleCreateBilling(item.id)}
+                              style={{
+                                borderStyle: "none",
+                                background: colors.primary,
+                                color: "#fff",
+                              }}
+                            >
+                              Billing
+                            </Button>
+
                             <Button
                               icon={<EditOutlined style={{ color: "#fff" }} />}
                               onClick={() => setEditingAppointment(item)}
