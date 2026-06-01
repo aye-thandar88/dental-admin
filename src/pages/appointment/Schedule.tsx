@@ -86,8 +86,8 @@ const Schedule = () => {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string>();
-  const [medicalRecords, setMedicalRecords] = useState<any>(null);
-  const [billings, setBillings] = useState<any>(null);
+  const [setMedicalRecords] = useState<any>(null);
+  const [setBillings] = useState<any>(null);
 
   const [creatingRecord, setCreatingRecord] = useState<any>(null);
   const [creatingBilling, setCreatingBilling] = useState<any>(null);
